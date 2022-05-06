@@ -19,12 +19,8 @@ EXPERIMENTAL
 
 Very rough sketch, many things are likely to change or break.
 
-On github for the issue tracker mainly.
-
 {tabs} extends {rstudioapi} to be able to conveniently close or move tabs,
 show diffs between unsaved and saved, restore tabs from cache etc.
-
-It's been developped because it's needed for {tricks} but has general features that fit better in a separate package. 
 
 ## Installation
 

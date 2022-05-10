@@ -36,6 +36,66 @@ tabs_close <- function(..., save = NA) {
 }
 
 #' @export
+tabs_review <- function(..., save = NA) {
+  info <- info_tabs()
+  ids <- tabs_tidy_select(..., info = info, include_closed = FALSE)
+  for(id in ids) {
+    tab_is_view <- info$type[info$id == id] %in% c("r_dataframe", "object_explorer")
+    script_is_saved <-
+      !is.na(info$saved_content[info$id == id]) &&
+      identical(info$saved_content[info$id == id], info$cached_contents[info$id == id])
+
+    tab_name <- info$tab_name[info$id == id]
+    if (tab_is_view || script_is_saved) {
+      if (tab_is_view)
+        title <- sprintf("View '%s':", tab_name)
+      else
+        title <- sprintf("Script '%s':", tab_name)
+      choice <- select.list(c("Close",  "Keep"), title = title)
+      switch(
+        choice,
+        "Keep" = next,
+        "Close" = rstudioapi::documentClose(id, save = FALSE)
+      )
+      next
+    }
+    script_is_untitled <- is.na(info$path[info$id == id])
+    if(script_is_untitled) {
+      tmp <- untitled_diff(id, info)
+    } else {
+      tmp <- unsaved_diff(id, info)
+    }
+    choice <- select.list(c("Save and close", "Close without saving", "Keep as is", "Save and keep"), sprintf("Script '%s':", tab_name))
+    file.remove(tmp)
+    switch(
+      choice,
+      "Keep as is" = next,
+      "Close without saving" = rstudioapi::documentClose(id, save = FALSE),
+      "Save and close" = {
+        if (script_is_untitled) {
+          path <- rstudioapi::selectFile(path = "R", existing = FALSE, caption = "Save as")
+          content <- info$cached_contents[[which(info$id == id)]]
+          writeLines(content, path)
+          rstudioapi::documentClose(id, save = FALSE)
+        } else {
+          rstudioapi::documentClose(id, save = FALSE)
+        }
+      },
+      "Save and keep" = {
+        if (script_is_untitled) {
+          path <- rstudioapi::selectFile(path = "R", existing = FALSE, caption = "Save as")
+          content <- info$cached_contents[[which(info$id == id)]]
+          writeLines(content, path)
+        } else {
+          rstudioapi::documentSave(id)
+        }
+      },
+    )
+  }
+  invisible(ids)
+}
+
+#' @export
 tabs_gather <- function(...) {
   info <- info_tabs()
   ids <- tabs_tidy_select(..., info = info, include_closed = FALSE)

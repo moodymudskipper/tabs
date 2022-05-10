@@ -37,8 +37,13 @@ tabs_close <- function(..., save = NA) {
 
 #' @export
 tabs_review <- function(..., save = NA) {
+
   info <- info_tabs()
-  ids <- tabs_tidy_select(..., info = info, include_closed = FALSE)
+  if (...length()) {
+    ids <- tabs_tidy_select(..., info = info, include_closed = FALSE)
+  } else {
+    ids <- tabs_tidy_select(everything(), info = info, include_closed = FALSE)
+  }
   for(id in ids) {
     tab_is_view <- info$type[info$id == id] %in% c("r_dataframe", "object_explorer")
     script_is_saved <-

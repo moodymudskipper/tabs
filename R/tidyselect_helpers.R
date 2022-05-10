@@ -62,3 +62,10 @@ is_saved <- function() {
   fun <- function(row) identical(row$saved_contents, row$cached_contents)
   which(vapply(data, fun, logical(1)))
 }
+
+#' @export
+is_view <- function() {
+  data <- tidyselect::peek_data()
+  fun <- function(row) row$type %in% c("r_data_frame", "object_explorer")
+  which(vapply(data, fun, logical(1)))
+}

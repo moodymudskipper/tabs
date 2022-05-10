@@ -56,7 +56,9 @@ stored_in <- function(dir, recursive = TRUE) {
   which(vapply(data, fun, logical(1)))
 }
 
-
-# tab_is_unsaved
-# tab_is_staged
-
+#' @export
+is_saved <- function() {
+  data <- tidyselect::peek_data()
+  fun <- function(row) identical(row$saved_contents, row$cached_contents)
+  which(vapply(data, fun, logical(1)))
+}

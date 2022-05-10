@@ -29,23 +29,3 @@ document_diff <- function(
   invisible(NULL)
 }
 
-#' @export
-documents_diff <- function(
-    untitled = FALSE,
-    mode = c("auto", "unified", "sidebyside", "context"),
-    context = 2,
-    ...) {
-  mode <- match.arg(mode)
-  info <- info_tabs()
-  info <- info[!is.na(info$dirty) & info$open & info$dirty,, drop = FALSE]
-  if (!untitled) info <- info[!is.na(info$path) ,, drop = FALSE]
-  for (id in info$id) {
-    row <- info[info$id == id,, drop = FALSE]
-    unsaved <- row$cached_path
-    call <- substitute(
-      diffobj::diffFile(PATH, unsaved, mode, context, ...),
-      list(PATH = row$path))
-    print(eval(call))
-  }
-  invisible(NULL)
-}

@@ -1,9 +1,3 @@
-# FIXME: we can simplify a lot just by naming rows by id in tab_info
-#  not sure if we should keep cached, tabs and files together, these might be
-#  kept as separate concepts
-
-#TODO: files_tidy_select
-
 #' @export
 files_tidy_select <- function(...) {
 
@@ -23,18 +17,7 @@ files_tidy_select <- function(...) {
 }
 
 #' @export
-tabs_tidy_select <- function(..., include_closed = FALSE, include_cached = FALSE, info = info_tabs()) {
-  if (!include_cached) {
-    info <- info[info$open,]
-  }
-  if (include_closed) {
-    paths <- setdiff(list.files(recursive = TRUE), info$project_path)
-    content <- lapply(paths, readLines)
-    closed_files <- data.frame(open = FALSE, project_path = paths, saved_contents = I(content), tab_name = basename(paths))
-    other_cols <- setdiff(names(info), names(closed_files))
-    closed_files[other_cols] <- NA
-    info <- rbind(info, closed_files)
-  }
+tabs_tidy_select <- function(...,  info = info_tabs()) {
 
   info_split <- split(info, seq_len(nrow(info)))
   # FIXME we want to do the tidy selection on tab names without extension, but

@@ -3,8 +3,8 @@ tabs_close <- function(..., save = NA) {
   info <- info_tabs()
   ids <- tabs_tidy_select(..., info = info, include_closed = FALSE)
   for(id in ids) {
-    if(is.na(save) && info$dirty[info$id == id]) {
-      script_is_untitled <- is.na(info$path[info$id == id])
+    if(is.na(save) && info[id, "dirty"]) {
+      script_is_untitled <- is.na(info[id, "path"])
       if(script_is_untitled) {
         tmp <- untitled_diff(id, info)
       } else {
@@ -20,7 +20,7 @@ tabs_close <- function(..., save = NA) {
         "Save and close" = {
           if (script_is_untitled) {
             path <- rstudioapi::selectFile(path = "R", existing = FALSE, caption = "Save as")
-            content <- info$cached_contents[[which(info$id == id)]]
+            content <- info[id, "cached_contents"]
             writeLines(content, path)
           } else {
             rstudioapi::documentClose(id, save = FALSE)
@@ -45,12 +45,12 @@ tabs_review <- function(..., save = NA) {
     ids <- tabs_tidy_select(everything(), info = info, include_closed = FALSE)
   }
   for(id in ids) {
-    tab_is_view <- info$type[info$id == id] %in% c("r_dataframe", "object_explorer")
+    tab_is_view <- info[id, "type"] %in% c("r_dataframe", "object_explorer")
     script_is_saved <-
-      !is.na(info$saved_content[info$id == id]) &&
-      identical(info$saved_content[info$id == id], info$cached_contents[info$id == id])
+      !is.na(info[id, "saved_content"]) &&
+      identical(info[id, "saved_content"], info[id, "cached_content"])
 
-    tab_name <- info$tab_name[info$id == id]
+    tab_name <- info[id, "tab_name"]
     if (tab_is_view || script_is_saved) {
       if (tab_is_view)
         title <- sprintf("View '%s':", tab_name)
@@ -64,7 +64,7 @@ tabs_review <- function(..., save = NA) {
       )
       next
     }
-    script_is_untitled <- is.na(info$path[info$id == id])
+    script_is_untitled <- is.na(info[id, "path"])
     if(script_is_untitled) {
       tmp <- untitled_diff(id, info)
     } else {
@@ -79,7 +79,7 @@ tabs_review <- function(..., save = NA) {
       "Save and close" = {
         if (script_is_untitled) {
           path <- rstudioapi::selectFile(path = "R", existing = FALSE, caption = "Save as")
-          content <- info$cached_contents[[which(info$id == id)]]
+          content <- info[id, "cached_content"]
           writeLines(content, path)
           rstudioapi::documentClose(id, save = FALSE)
         } else {
@@ -89,7 +89,7 @@ tabs_review <- function(..., save = NA) {
       "Save and keep" = {
         if (script_is_untitled) {
           path <- rstudioapi::selectFile(path = "R", existing = FALSE, caption = "Save as")
-          content <- info$cached_contents[[which(info$id == id)]]
+          content <- info[id, "cached_content"]
           writeLines(content, path)
         } else {
           rstudioapi::documentSave(id)
@@ -106,18 +106,18 @@ tabs_gather <- function(...) {
   ids <- tabs_tidy_select(..., info = info, include_closed = FALSE)
   for(id in ids) {
     # if saved script, just close and reopen
-    path <- info$path[info$id == id]
-    existing_file_is_saved <- !is.na(path) && !info$dirty[info$id == id]
+    path <- info[id, "path"]
+    existing_file_is_saved <- !is.na(path) && !info[id, "dirty"]
     if (existing_file_is_saved) {
       rstudioapi::documentClose(id, save = FALSE)
       rstudioapi::navigateToFile(path)
       next
     }
 
-    existing_file_is_unsaved <- !is.na(path) && info$dirty[info$id == id]
+    existing_file_is_unsaved <- !is.na(path) && info[id, "dirty"]
     if (existing_file_is_unsaved) {
       cached_content <- paste(
-        info$cached_contents[[which(info$id == id)]],
+        info[id, "cached_content"],
         collapse = "\n")
       rstudioapi::documentClose(id, save = FALSE)
 
@@ -132,9 +132,9 @@ tabs_gather <- function(...) {
       next
     }
 
-    tab_is_dataframe_viewer <-  info$type[info$id == id] == "r_dataframe"
+    tab_is_dataframe_viewer <-  info[id, "type"] == "r_dataframe"
     if (tab_is_dataframe_viewer) {
-      prop <- info$properties[[which(info$id == id)]]
+      prop <- info[id, "properties"]
       expr <- prop$expression
       caption <- prop$caption
       env_chr <- prop$environment
@@ -144,7 +144,7 @@ tabs_gather <- function(...) {
       if (inherits(obj, "try-error")) {
         rlang::warn(paste0(
           "couldn't move data viewer tab '",
-          info$tab_name[info$id == id],
+          info[id, "tab_name"],
           "' because the data cannot be recreated"
         ))
         next
@@ -155,13 +155,13 @@ tabs_gather <- function(...) {
       next
     }
 
-    tab_is_object_explorer <-  info$type[info$id == id] == "object_explorer"
+    tab_is_object_explorer <-  info[id, "type"] == "object_explorer"
     if (tab_is_object_explorer) {
       rlang::warn("Gathering 'object explorer' tabs is not supported")
       next
     }
 
-    tab_is_untitled <- is.na(info$path[info$id == id])
+    tab_is_untitled <- is.na(info[id, "path"])
     if (tab_is_untitled) {
       rlang::warn("Gathering untitled tabs is not supported")
       next

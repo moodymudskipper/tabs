@@ -20,9 +20,6 @@ files_tidy_select <- function(...) {
 tabs_tidy_select <- function(...,  info = info_tabs()) {
 
   info_split <- split(info, seq_len(nrow(info)))
-  # FIXME we want to do the tidy selection on tab names without extension, but
-  # not have false positives for "my.data.frame", so viewer tabs should be
-  # excluded from this principle
 
   tab_name_no_ext <- info$tab_name
   has_ext <- !is.na(info$path) & grepl("\\.[^.]+$", tab_name_no_ext)

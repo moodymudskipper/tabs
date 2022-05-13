@@ -47,8 +47,8 @@ tabs_review <- function(..., save = NA) {
   for(id in ids) {
     tab_is_view <- info[id, "type"] %in% c("r_dataframe", "object_explorer")
     script_is_saved <-
-      !is.na(info[id, "saved_content"]) &&
-      identical(info[id, "saved_content"], info[id, "cached_content"])
+      !is.na(info[id, "saved_contents"]) &&
+      identical(info[id, "saved_contents"], info[id, "cached_contents"])
 
     tab_name <- info[id, "tab_name"]
     if (tab_is_view || script_is_saved) {
@@ -79,7 +79,7 @@ tabs_review <- function(..., save = NA) {
       "Save and close" = {
         if (script_is_untitled) {
           path <- rstudioapi::selectFile(path = "R", existing = FALSE, caption = "Save as")
-          content <- info[id, "cached_content"]
+          content <- info[id, "cached_contents"]
           writeLines(content, path)
           rstudioapi::documentClose(id, save = FALSE)
         } else {
@@ -89,7 +89,7 @@ tabs_review <- function(..., save = NA) {
       "Save and keep" = {
         if (script_is_untitled) {
           path <- rstudioapi::selectFile(path = "R", existing = FALSE, caption = "Save as")
-          content <- info[id, "cached_content"]
+          content <- info[id, "cached_contents"]
           writeLines(content, path)
         } else {
           rstudioapi::documentSave(id)
@@ -117,7 +117,7 @@ tabs_gather <- function(...) {
     existing_file_is_unsaved <- !is.na(path) && info[id, "dirty"]
     if (existing_file_is_unsaved) {
       cached_content <- paste(
-        info[id, "cached_content"],
+        info[id, "cached_contents"],
         collapse = "\n")
       rstudioapi::documentClose(id, save = FALSE)
 

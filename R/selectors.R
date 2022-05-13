@@ -1,7 +1,8 @@
 #' @export
 tabs_close <- function(..., save = NA) {
   info <- info_tabs()
-  ids <- tabs_tidy_select(..., info = info)
+  info_rows <- tabs_tidy_select(..., info = info)
+  ids <- names(info_rows)
   for(id in ids) {
     if(is.na(save) && info[id, "dirty"]) {
       script_is_untitled <- is.na(info[id, "path"])
@@ -37,13 +38,13 @@ tabs_close <- function(..., save = NA) {
 
 #' @export
 tabs_review <- function(..., save = NA) {
-
   info <- info_tabs()
   if (...length()) {
-    ids <- tabs_tidy_select(..., info = info)
+    info_rows <- tabs_tidy_select(..., info = info)
   } else {
-    ids <- tabs_tidy_select(everything(), info = info)
+    info_rows <- tabs_tidy_select(everything(), info = info)
   }
+  ids <- names(info_rows)
   for(id in ids) {
     tab_is_view <- info[id, "type"] %in% c("r_dataframe", "object_explorer")
     script_is_saved <-
@@ -103,7 +104,8 @@ tabs_review <- function(..., save = NA) {
 #' @export
 tabs_gather <- function(...) {
   info <- info_tabs()
-  ids <- tabs_tidy_select(..., info = info)
+  info_rows <- tabs_tidy_select(..., info = info)
+  ids <- names(info_rows)
   for(id in ids) {
     # if saved script, just close and reopen
     path <- info[id, "path"]
@@ -188,7 +190,8 @@ tabs_select <- function(..., save_closed = NA) {
   tabs_keep(..., save_closed = save_closed)
 
   info <- info_tabs()
-  selection <- tabs_tidy_select(...)
+  info_rows <- tabs_tidy_select(...)
+  selection <- names(info_rows)
 
   #other_selection <- selection[-1]
   ind <- match(selection, info$id)
@@ -207,7 +210,8 @@ tabs_select <- function(..., save_closed = NA) {
 
   # refresh info, we recreated some tabs so ids changed
   info <- info_tabs()
-  selection <- tabs_tidy_select(..., info = info)
+  info_rows <- tabs_tidy_select(..., info = info)
+  selection <- names(info_rows)
 
   if(!any(untitled_selection_lgl)) return(invisible(selection))
   # order untitled

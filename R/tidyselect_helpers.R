@@ -75,3 +75,10 @@ is_script <- function() {
   data <- tidyselect::peek_data()
   fun <- function(row) row$is_script
   which(vapply(data, fun, logical(1)))
+}
+
+# we don't export this one
+has_doc_ids <- function(ids) {
+  data <- tidyselect::peek_data()
+  match(ids, sapply(data, `[[`, "id"))
+}

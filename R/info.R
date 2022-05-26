@@ -14,6 +14,8 @@ info_tabs <- function() {
 
   # fetch info from .Rproj.User/<???>/sources/s-<???>/ -------------------------
   open_tabs_files <- list.files(meta_data_dir, pattern = "^[0-9A-Z]+$", full.names = TRUE)
+  if (!length(empty_info_tabs)) return(empty_info_tabs())
+
 
   # OPEN FILES
   names(open_tabs_files) <- basename(open_tabs_files)
@@ -73,6 +75,32 @@ info_tabs <- function() {
 
   row.names(info) <- info$id
   info
+}
+
+empty_info_tabs <- function() {
+  data.frame(
+    tab_name = character(0),
+    id = character(0),
+    open = logical(0),
+    is_script = logical(0),
+    is_untitled = logical(0),
+    type = character(0),
+    path = character(0),
+    created = structure(numeric(0), class = c("POSIXct", "POSIXt"), tzone = ""),
+    lastKnownWriteTime = structure(numeric(0), class = c("POSIXct", "POSIXt"), tzone = ""),
+    last_content_update = structure(numeric(0), class = c("POSIXct", "POSIXt"), tzone = ""),
+    relative_order = integer(0),
+    project_path = character(0),
+    dirty = logical(0),
+    properties = structure(list(), .Names = character(0)),
+    encoding = character(0),
+    cached_path = character(0),
+    cached_contents = structure(list(), .Names = character(0)),
+    saved_contents = structure(list(), .Names = character(0)),
+    is_open_script = logical(0),
+    tab_name_no_ext = character(0),
+    stringsAsFactors = FALSE
+    )
 }
 
 info_cached <- function() {

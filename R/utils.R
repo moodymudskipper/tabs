@@ -3,7 +3,6 @@ navigate_to_id <- function(id, info = info_tabs()) {
   current_id <- rstudioapi::documentId(FALSE)
   # if we're already on the right tab there no need to do anything
   if(id == current_id) return(invisible(id))
-  info <- info_tabs()
   path <- info$path[info$id == id]
 
   rstudioapi::navigateToFile(path)

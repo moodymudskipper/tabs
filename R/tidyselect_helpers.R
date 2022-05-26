@@ -69,3 +69,9 @@ is_view <- function() {
   fun <- function(row) row$type %in% c("r_data_frame", "object_explorer")
   which(vapply(data, fun, logical(1)))
 }
+
+#' @export
+is_script <- function() {
+  data <- tidyselect::peek_data()
+  fun <- function(row) row$is_script
+  which(vapply(data, fun, logical(1)))

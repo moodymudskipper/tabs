@@ -14,8 +14,6 @@ info_tabs <- function() {
 
   # fetch info from .Rproj.User/<???>/sources/s-<???>/ -------------------------
   open_tabs_files <- list.files(meta_data_dir, pattern = "^[0-9A-Z]+$", full.names = TRUE)
-  content_files <- list.files(meta_data_dir, pattern = "^[0-9A-Z]+-contents$", full.names = TRUE)
-  closed_content_files <- setdiff(content_files, paste0(open_tabs_files, "-contents"))
 
   # OPEN FILES
   names(open_tabs_files) <- basename(open_tabs_files)

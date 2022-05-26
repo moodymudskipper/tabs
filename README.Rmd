@@ -39,7 +39,9 @@ The most important functions:
 
 * `tabs_keep()` keeps matched tabs open 
 * `tabs_close()` closes matched tabs
-* `tabs_select()` keeps matched tabs and attempts to reorder them (There are some limitation for viewed items than cannot be recreated)
+* `tabs_select()` keeps matched tabs and attempts to reorder them (There are 
+  some limitations, for instance viewed items than cannot be recreated and sorting
+  of untitled tabs is not robust)
 * `tabs_gather()` moves matched tabs to the right side of the current tab
 * `tabs_open()` opens new tabs by matching file names
 * `tabs_resurrect()` brings back scripts that were closed without being saved but
@@ -58,3 +60,13 @@ Other helpers are available :
 * `code_matches()` restricts selection to files whose code matches the provided pattern
 * `code_uses()` restricts selection to R scripts whose code uses the provided variable
 * `stored_in()` restricts selection to files located in a given directory, optionally recursive
+* `is_saved()` restricts selection to tabs that don't have unsaved modifications
+
+## Note
+
+This package makes assumption on the way RStudio stores information about tabs,
+it's undocumented so the day they change it the package will break.
+
+Luckily this should not be critical since this package is made for interactive
+use so hopefully whenever it breaks we can adapt and move on without much damage
+done.

@@ -279,3 +279,12 @@ tabs_open <- function(...) {
   }
   invisible(paths)
 }
+
+#' @export
+tabs_goto <- function(selection) {
+  info_rows <- tabs_tidy_select({{selection}})
+  info_rows <- Filter(function(row) !row$is_untitled, info_rows)
+  if (!length(info_rows)) rlang::inform("The selection didn't match any open tab")
+  id <- sort(names(info_rows))[[1]]
+  navigate_to_id(id)
+}

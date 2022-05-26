@@ -3,13 +3,13 @@ tabs_close <- function(..., save = NA) {
   info <- info_tabs()
   info_rows <- tabs_tidy_select(..., info = info)
   ids <- names(info_rows)
-  for(id in ids) {
-    if(is.na(save) && info[id, "dirty"]) {
-      script_is_untitled <- is.na(info[id, "path"])
+  for(info_row in info_rows) {
+    if(is.na(save) && info_row$dirty) {
+      script_is_untitled <- is.na(info_row$path)
       if(script_is_untitled) {
-        tmp <- untitled_diff(id, info)
+        tmp <- untitled_diff(info_row$id, info)
       } else {
-        tmp <- unsaved_diff(id, info)
+        tmp <- unsaved_diff(info_row$id, info)
       }
 
       choice <- select.list(c("Save and close", "Close without saving", "Keep as is"), title = "File has unsaved changes:")
@@ -17,23 +17,23 @@ tabs_close <- function(..., save = NA) {
       switch(
         choice,
         "Keep as is" = next,
-        "Close without saving" = rstudioapi::documentClose(id, save = FALSE),
+        "Close without saving" = rstudioapi::documentClose(info_row$id, save = FALSE),
         "Save and close" = {
           if (script_is_untitled) {
             path <- rstudioapi::selectFile(path = "R", existing = FALSE, caption = "Save as")
-            content <- info[id, "cached_contents"]
+            content <- info_row$cached_contents
             writeLines(content, path)
           } else {
-            rstudioapi::documentClose(id, save = FALSE)
+            rstudioapi::documentClose(info_row$id, save = FALSE)
           }
         }
       )
       # since we cannot focus on given tab we can show diff in viewer
     } else {
-      rstudioapi::documentClose(id, save = save)
+      rstudioapi::documentClose(info_row$id, save = save)
     }
   }
-  invisible(ids)
+  invisible(info_rows)
 }
 
 #' @export
@@ -119,7 +119,7 @@ tabs_gather <- function(...) {
     existing_file_is_unsaved <- !is.na(path) && info[id, "dirty"]
     if (existing_file_is_unsaved) {
       cached_content <- paste(
-        info[id, "cached_contents"],
+        info[id, "cached_contents"][[1]],
         collapse = "\n")
       rstudioapi::documentClose(id, save = FALSE)
 
@@ -187,55 +187,56 @@ tabs_keep <- function(..., save_closed = NA) {
 
 #' @export
 tabs_select <- function(..., save_closed = NA) {
-  tabs_keep(..., save_closed = save_closed)
 
-  info <- info_tabs()
-  info_rows <- tabs_tidy_select(...)
-  selection <- names(info_rows)
-
-  #other_selection <- selection[-1]
-  ind <- match(selection, info$id)
-
-  # order titled
-  untitled_selection_lgl <- info$is_untitled[ind]
-  titled_selection <- selection[!untitled_selection_lgl]
-  titled_tab_nms <- info$tab_name_no_ext[match(titled_selection, info$id)]
-
-  path1 <- info$path[match(selection[1], info$id)]
-  rstudioapi::navigateToFile(path1)
-  tabs_gather(!!!titled_tab_nms[-1])
-
-  #make sure gathering is over before fetching new info, we might make this more robust
-  Sys.sleep(.05)
-
-  # refresh info, we recreated some tabs so ids changed
+  # close unneeded tabs --------------------------------------------------------
   info <- info_tabs()
   info_rows <- tabs_tidy_select(..., info = info)
-  selection <- names(info_rows)
+  # to do : necessary ?
+  # info_to_close <- info[!info$id %in% names(info_rows),, drop = FALSE]
+  # info_rows_to_close <- split(info_to_close, seq_len(nrow(info_to_close)))
+  # tabs_close_impl(info_rows_to_close, save = NA)
+  tabs_close(!has_doc_ids(names(info_rows)), save = NA)
 
-  if(!any(untitled_selection_lgl)) return(invisible(selection))
-  # order untitled
-
-  ind <- match(selection, info$id)
-  untitled_selection_lgl <- info$is_untitled[ind]
-  script_selection_lgl <- info$is_script[ind]
-  untitled_selection <- selection[untitled_selection_lgl]
-  titled_selection <- selection[!untitled_selection_lgl]
-  viewer_selection <- selection[!script_selection_lgl]
+  # refresh and order kept tabs ------------------------------------------------
+  # note : we refresh because this might be more than initially selected
+  info_after_close <- info_tabs()
+  info <- info_after_close[union(names(info_rows), info_after_close$id),, drop = FALSE]
 
 
-  # the reference tabs are titled scripts (no untitled, no viewer)
-  ref_tabs <- setdiff(titled_selection, viewer_selection)[cumsum(!selection %in% c(untitled_selection, viewer_selection))]
-  names(selection) <- ref_tabs
-  untitled_selection <- selection[untitled_selection_lgl]
-  untitled_tab_nms <- info$tab_name_no_ext[match(untitled_selection, info$id)]
-  untitled_selection <- untitled_selection[order(untitled_tab_nms)]
+  # order titled tabs ----------------------------------------------------------
+  # done by navigating to first titled tab and gathering other titled tabs
+
+  # needed because to create a temp file first we need a saved tab to zoom to first
+  if (info$is_untitled[[1]]) stop("We don't support selecting an Untitled tab first")
+  info_titled <- info[!info$is_untitled,, drop = FALSE]
+  rstudioapi::navigateToFile(info_titled$path[1])
+  tabs_gather(!!!has_doc_ids(info_titled$id[-1]))
+
+  if(!any(info$is_untitled)) return(invisible(selection))
+
+  repeat {
+    info_after_gather <- info_tabs()
+    if(nrow(info_after_gather) == nrow(info)) break()
+    message("iterating")
+  }
+
+  # refresh ids ----------------------------------------------------------------
+  # we refreshed titled tabs so their ids changed, but not their paths
+  # we fetch order from old info since it's ordered right
+  info$order <- seq_len(nrow(info))
+  info <- merge(info_after_gather, info[c("order", "path")])
+  info <- info[order(info$order), names(info_after_gather)]
+  row.names(info) <- info$id
+
+  # compute reference tab and setup loop ---------------------------------------
+
+  ref_tabs <- with(info, id[!is_untitled & is_script])
+  info$ref_tab <- with(info, ref_tabs[cumsum(id %in% ref_tabs)])
+  untitled_tab_nms <- info[info$is_untitled, "tab_name"]
   n <- max(as.numeric(sub("^Untitled", "", untitled_tab_nms)))
 
-  contents <- info$cached_contents[match(untitled_selection, info$id)]
+  # remove and recreate unititled tabs -----------------------------------------
   tabs_close(all_of(untitled_tab_nms), save = FALSE)
-
-  j <- 0
   for (i in seq_len(n)) {
     tab_nm <- paste0("Untitled", i)
     if(!tab_nm %in% untitled_tab_nms) {
@@ -243,14 +244,16 @@ tabs_select <- function(..., save_closed = NA) {
       rstudioapi::documentNew("")
       next
     }
-    j <- j + 1
-    focus_titled_tab_id <- names(untitled_selection)[j]
+    row_ind <- info$tab_name == tab_nm
+    focus_titled_tab_id <- info[row_ind, "ref_tab"]
     navigate_to_id(focus_titled_tab_id, info)
-    rstudioapi::documentNew(contents[j])
+    contents <- info[row_ind, "cached_contents"][[1]]
+
+    rstudioapi::documentNew(contents)
   }
   to_close <- setdiff(paste0("Untitled", seq_len(n)), untitled_tab_nms)
   tabs_close(all_of(to_close), save = FALSE)
-  invisible(selection)
+  invisible(info_tabs())
 }
 
 #' @export

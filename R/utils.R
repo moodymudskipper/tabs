@@ -1,6 +1,7 @@
 # rstudioapi::documentId(FALSE) is too fast and returns older id so we loop
 navigate_to_id <- function(id, info = info_tabs()) {
   current_id <- rstudioapi::documentId(FALSE)
+  # if we're already on the right tab there no need to do anything
   if(id == current_id) return(invisible(id))
   info <- info_tabs()
   path <- info$path[info$id == id]

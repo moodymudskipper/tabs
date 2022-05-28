@@ -326,3 +326,30 @@ tabs_delete <- function(..., review = TRUE, scope = c("tabs", "files")) {
   }
 }
 
+#' @export
+tabs_rename <- function(name, overwrite = FALSE) {
+  name <- as.character(substitute(name))
+  rstudioapi::documentSave()
+  old_path <- rstudioapi::documentPath()
+  old_name <- basename(old_path)
+  ext <- tools::file_ext(old_name)
+  dir <- dirname(old_path)
+  if (ext == "") {
+    path <- sprintf("%s/%s", dir, name)
+  } else {
+    path <- sprintf("%s/%s.%s", dir, name, ext)
+  }
+  success <- file.copy(old_path, path, overwrite = overwrite)
+  if (!success) {
+    rlang::abort(c(
+      "Copy failed",
+      x = sprintf("Destination path '%s' already exists", path),
+      i = "Do you need `overwrite = TRUE`?"
+    ))
+  }
+  old_id <- rstudioapi::documentId(allowConsole = FALSE)
+  rstudioapi::navigateToFile(path)
+  rstudioapi::documentClose(old_id)
+  file.remove(old_path)
+}
+

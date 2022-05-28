@@ -288,3 +288,41 @@ tabs_goto <- function(selection) {
   id <- sort(names(info_rows))[[1]]
   navigate_to_id(id)
 }
+
+#' @export
+tabs_delete <- function(..., review = TRUE, scope = c("tabs", "files")) {
+  scope <- match.arg(scope)
+  if (scope == "files") {
+    paths <- files_tidy_select(...)
+    for (path in paths) {
+      rstudioapi::navigateToFile(path)
+      if (review) {
+        Sys.sleep(.1)
+        rstudioapi::sendToConsole("", FALSE)
+        choice <- select.list(c("remove", "keep"))
+        rstudioapi::documentClose()
+        if (choice == "remove") file.remove(path)
+      } else {
+        file.remove(path)
+      }
+    }
+  } else {
+    info_rows <- tabs_tidy_select(...)
+    for (row in info_rows) {
+      rstudioapi::navigateToFile(row$path)
+      if (review) {
+        Sys.sleep(.1)
+        rstudioapi::sendToConsole("", FALSE)
+        choice <- select.list(c("remove", "keep"))
+        if (choice == "remove") {
+          rstudioapi::documentClose()
+          file.remove(row$path)
+        }
+      } else {
+        rstudioapi::documentClose()
+        file.remove(row$path)
+      }
+    }
+  }
+}
+

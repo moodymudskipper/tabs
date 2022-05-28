@@ -299,22 +299,29 @@ tabs_delete <- function(..., review = TRUE, scope = c("tabs", "files")) {
       if (review) {
         Sys.sleep(.1)
         rstudioapi::sendToConsole("", FALSE)
-        choice <- select.list(c("remove", "keep"))
+        choice <- select.list(c("Remove", "Keep"))
         rstudioapi::documentClose()
-        if (choice == "remove") file.remove(path)
+        if (choice == "Remove") file.remove(path)
       } else {
         file.remove(path)
       }
     }
   } else {
     info_rows <- tabs_tidy_select(...)
+    if (!length(info_rows)) {
+      path <- rstudioapi::documentPath()
+      if (is.null(path)) rlang::abort("This tab cannot be deleted")
+      info_rows <- list(rows = list(path = path))
+    }
     for (row in info_rows) {
       rstudioapi::navigateToFile(row$path)
       if (review) {
         Sys.sleep(.1)
         rstudioapi::sendToConsole("", FALSE)
-        choice <- select.list(c("remove", "keep"))
-        if (choice == "remove") {
+        choice <- select.list(
+          title = sprintf("Remove '%s' ?", row$path),
+          c("Remove", "Keep"))
+        if (choice == "Remove") {
           rstudioapi::documentClose()
           file.remove(row$path)
         }

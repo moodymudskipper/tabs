@@ -1,4 +1,5 @@
 #' @importFrom utils select.list
+#' @importFrom rlang %||%
 NULL
 
 globalVariables(c("meta_data_dir", "everything", "View"))
@@ -6,6 +7,8 @@ globalVariables(c("meta_data_dir", "everything", "View"))
 meta_data_dir <- NULL
 
 .onLoad <- function(lib, pkg){
+
+  options(tabs.max_tabs = getOption("tabs.max_tabs") %||% 10)
 
   if (!rstudioapi::isAvailable()) return()
   # The Folder structure is not documented AFAIK so we're making assumption on how it "should" be

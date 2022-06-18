@@ -2,6 +2,15 @@
 tabs_close <- function(..., save = NA) {
   info <- info_tabs()
   info_rows <- tabs_tidy_select(..., info = info)
+  n_tabs <- length(info_rows)
+  if (n_tabs > getOption("tabs.max_tabs")) {
+    choice <- select.list(
+      title = sprintf("This will attempt to close %s tabs", n_tabs),
+      choices = c("OK", "Cancel")
+    )
+    if(choice == "Cancel") return(invisible())
+  }
+
   ids <- names(info_rows)
   for(info_row in info_rows) {
     if(is.na(save) && info_row$dirty) {
@@ -268,6 +277,14 @@ tabs_resurrect <- function(id = NULL) {
 #' @export
 tabs_open <- function(...) {
   paths <- files_tidy_select(...)
+  n_tabs <- length(paths)
+  if (n_tabs > getOption("tabs.max_tabs")) {
+    choice <- select.list(
+      title = sprintf("This will attempt to open %s tabs", n_tabs),
+      choices = c("OK", "Cancel")
+    )
+    if(choice == "Cancel") return(invisible())
+  }
   for (path in paths) {
     rstudioapi::navigateToFile(path)
   }

@@ -354,3 +354,10 @@ tabs_rename <- function(name, overwrite = FALSE) {
   file.remove(old_path)
 }
 
+#' @export
+tabs_path <- function(...) {
+  if(!...length()) return(rstudioapi::documentPath())
+  info <- info_tabs()
+  info_rows <- tabs_tidy_select(..., info = info)
+  unname(sapply(info_rows, `[[`, "path"))
+}

@@ -16,6 +16,6 @@ navigate_to_id <- function(id, info = info_tabs()) {
 #' @export
 abc <- function(..., desc = FALSE) {
   data <- tidyselect::peek_data()
-  named_selection <- tidyselect::eval_select(rlang::expr(c(...)), data)
+  named_selection <- eval_select2(rlang::expr(c(...)), data)
   named_selection[order(names(named_selection), named_selection, decreasing = desc)]
 }

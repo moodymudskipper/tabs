@@ -4,7 +4,7 @@ files_tidy_select <- function(...) {
   info <- info_files()
   info_rows <- split(info, seq_len(nrow(info)))
 
-  ind <- tidyselect::eval_select(
+  ind <- eval_select2(
     rlang::expr(c(...)),
     rlang::set_names(info_rows, info$file_name_no_ext))
   paths <- info$path[ind]
@@ -16,7 +16,7 @@ files_tidy_select <- function(...) {
 #' @export
 tabs_tidy_select <- function(...,  info = info_tabs()) {
   info_rows <- split(info, seq_len(nrow(info)))
-  ind <- tidyselect::eval_select(
+  ind <- eval_select2(
     rlang::expr(c(...)),
     rlang::set_names(info_rows, info$tab_name_no_ext))
   rlang::set_names(info_rows[ind], info$id[ind])

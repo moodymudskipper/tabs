@@ -6,7 +6,7 @@ and <- function(...) {
   data <- tidyselect::peek_data()
   sel <- seq_along(data)
   for (dot in dots) {
-    sel <- sel[tidyselect::eval_select(dot, data[sel])]
+    sel <- sel[eval_select2(dot, data[sel])]
   }
   sel
 }
@@ -18,7 +18,7 @@ or <- function(...) {
   sel <- integer()
   for (dot in dots) {
     unsel <- setdiff(unsel, sel)
-    sel <- union(sel, unsel[tidyselect::eval_select(dot, data[unsel])])
+    sel <- union(sel, unsel[eval_select2(dot, data[unsel])])
   }
   sel
 }

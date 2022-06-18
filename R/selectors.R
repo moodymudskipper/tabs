@@ -179,12 +179,6 @@ tabs_keep <- function(..., save_closed = NA) {
   tabs_close(!c(...), save = save_closed)
 }
 
-# FIXME : This code is horrendous, it uses tidy selection 3 times, expensive and unnecessary
-#   better use the tidy selection only once and when ids are reassigned match them
-#   by tab names using the info table. Should already look much better by using
-#   row indexing in info
-#
-
 #' @export
 tabs_select <- function(..., save_closed = NA) {
 

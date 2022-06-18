@@ -19,3 +19,17 @@ abc <- function(..., desc = FALSE) {
   named_selection <- eval_select2(rlang::expr(c(...)), data)
   named_selection[order(names(named_selection), named_selection, decreasing = desc)]
 }
+
+
+chr_to_lng <- function(code) {
+  if(!length(code)) return(NULL)
+  if (length(code) == 1) return (str2lang(as.character(code)))
+  as.call(c(quote(`{`), parse(text = code)))
+}
+
+
+code_defines_impl <- function(call, sym) {
+  if (!is.call(call)) return(FALSE)
+  if (identical(call[[1]], quote(`<-`)) && identical(call[[2]], sym)) return(TRUE)
+  any(sapply(call, code_defines_impl, sym))
+}

@@ -77,6 +77,23 @@ is_script <- function() {
   which(vapply(data, fun, logical(1)))
 }
 
+#' @export
+code_defines <- function(var, nested = FALSE, cached = FALSE) {
+  data <- tidyselect::peek_data()
+  sym <- substitute(var)
+  fun <- function(row) {
+    if (!isTRUE(row$type == "r_source")) return(FALSE)
+    code <- if(cached) chr_to_lng(row$cached_contents[[1]]) else chr_to_lng(row$saved_contents[[1]])
+    if (!nested) {
+      matches_lgl <- sapply(code, function(call)
+        is.call(call) && identical(call[[1]], quote(`<-`)) && identical(call[[2]], sym))
+      return(any(matches_lgl))
+    }
+    code_defines_impl(code, sym)
+  }
+  which(vapply(data, fun, logical(1)))
+}
+
 # we don't export this one
 has_doc_ids <- function(ids) {
   data <- tidyselect::peek_data()
